@@ -11,8 +11,9 @@ using UsersApi.Models;
 namespace UsersApi.Controllers
 {
     [Produces("application/json")]
-    [Route("api/Orders")]
-    public class OrdersController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class OrdersController : ControllerBase
     {
         private readonly UsersApiContext _context;
 
@@ -84,17 +85,26 @@ namespace UsersApi.Controllers
 
         // POST: api/Orders
         [HttpPost]
-        public async Task<IActionResult> PostOrder([FromBody] Order order)
+        public async Task<ActionResult<Order>> PostOrder([FromBody] Order order, int userId)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            _context.Order.Add(order);
+            var user = _context.Users.FirstOrDefault(s => s.Id == userId);
+
+            await _context.Order.AddAsync(new Order()
+            {
+                Id = order.Id,
+                Date = order.Date,
+                Price = order.Price,
+                User = user
+            });
+
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetOrder", new { id = order.Id }, order);
+            return order;
         }
 
         // DELETE: api/Orders/5
