@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Microsoft.EntityFrameworkCore;
+using NJsonSchema;
+using NSwag.AspNetCore;
 using UsersApi.Data;
 
 namespace UsersApi
@@ -27,8 +23,16 @@ namespace UsersApi
         {
             services.AddMvc();
 
+            ConfigureOpenApi(services);// adding the swagger configuration to the container
+
             services.AddDbContext<UsersApiContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("UsersApiContext")));
+        }
+
+        //configure Swagger(OpenApi)
+        private void ConfigureOpenApi(IServiceCollection services)
+        {
+            services.AddSwagger();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -37,9 +41,23 @@ namespace UsersApi
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }
 
-            app.UseMvc();
+                // Register the Swagger generator and the Swagger UI middlewares
+                app.UseSwaggerUi3WithApiExplorer(settings =>
+                {
+                    settings.GeneratorSettings.DefaultPropertyNameHandling =
+                        PropertyNameHandling.CamelCase;
+
+                    settings.GeneratorSettings.Description = "An user ASP.NET Core web api";
+                    settings.GeneratorSettings.Title = "User Web Api";
+                });
+            }
+            else
+            {
+                app.UseMvc();
+            }
+            app.UseHttpsRedirection();
+            app.UseMvcWithDefaultRoute();
         }
     }
 }

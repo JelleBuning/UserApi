@@ -37,7 +37,10 @@ namespace UsersApi.Controllers
                 return BadRequest(ModelState);
             }
 
-            var users = await _context.Users.SingleOrDefaultAsync(m => m.Id == id);
+            var users = await _context.Users
+                .Where(u => u.Id == id)
+                .Include(u => u.Orders)
+                .FirstOrDefaultAsync();
 
             if (users == null)
             {
@@ -91,7 +94,9 @@ namespace UsersApi.Controllers
                 return BadRequest(ModelState);
             }
             //_context.Set<User>().ToList();
+
             _context.Users.Add(users);
+
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetUsers", new { id = users.Id }, users);
